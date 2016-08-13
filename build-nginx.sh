@@ -1,6 +1,6 @@
 #!/bin/sh
 set -e
-FORCE_IMAGICK_INSTALL=y
+#FORCE_IMAGICK_INSTALL=y
 SRC_DIR=/tmp/nginx-sources
 NGINX_VERSION="1.11.3"
 PAGESPEED_VERSION="1.11.33.2"
@@ -9,15 +9,24 @@ SMALL_LIGHT_VERSION="0.8.0"
 # Use MTUNE="generic" if you don't know what to choose
 MTUNE="i686"
 
-echo Install requirements \[1/5\]
-yum install -y freetype-devel freetype libraqm-devel harfbuzz-devel harfbuzz-icu harfbuzz fribidi-devel ghostscript autoconf 
+echo Install requirements \[1/3\]
+yum install -y freetype-devel freetype libraqm-devel \
+	harfbuzz-devel harfbuzz-icu harfbuzz fribidi-devel \
+	ghostscript autoconf
 
-echo Install requirements \[2/5\]
+echo Install requirements \[2/3\]
 if [ `which Wand-config` ] && [ z$FORCE_IMAGICK_INSTALL = "z" ]; then
 	echo Install ImageMagic \[skip\]
 else
 	if [ -e /usr/local/bin/MagickWand-config ] && [ ! -e /usr/bin/Wand-config ]; then
-		ln -s /usr/local/bin/MagickWand-config /usr/bin/Wand-config
+		if [ ! -e /usr/bin/Wand-config ]; then
+			echo Add link from Wand-config to MagickWand-config
+			ln -s /usr/local/bin/MagickWand-config /usr/bin/Wand-config
+		fi
+		if [ ! -d /usr/local/include/ImageMagick-7/wand ] && [ -d /usr/local/include/ImageMagick-7/MagickWand ]; then
+			echo Add link from /wand to /MagicWand
+			ln -s /usr/local/include/ImageMagick-7/MagickWand /usr/local/include/ImageMagick-7/wand
+		fi
 	else
 		echo Install ImageMagick
 		mkdir -p $SRC_DIR
@@ -37,16 +46,17 @@ else
 		rm -rf ImageMagick
 
 		if [ ! -e /usr/bin/Wand-config ] && [ ! -e /usr/bin/Wand-config ]; then
+			echo Add link from Wand-config to MagickWand-config
 			ln -s /usr/local/bin/MagickWand-config /usr/bin/Wand-config
 		fi
+		if [ ! -d /usr/local/include/ImageMagick-7/wand ] && [ -d /usr/local/include/ImageMagick-7/MagickWand ]; then
+			echo Add link from /wand to /MagicWand
+                        ln -s /usr/local/include/ImageMagick-7/MagickWand /usr/local/include/ImageMagick-7/wand
+                fi
 	fi
 fi
-echo Install requirements \[3/5\]
-yum install -y gcc-c++ pcre-devel zlib-devel make unzip pcre2-devel
-echo Install requirements \[4/5\]
-yum install -y imlib2-devel
-echo Install requirements \[5/5\]
-yum install -y gd gd-devel
+echo Install requirements \[3/3\]
+yum install -y gcc-c++ pcre-devel zlib-devel make unzip pcre2-devel imlib2-devel libxml2 libxml2-devel libxslt-devel gd gd-devel perl-ExtUtils-Embed GeoIP-devel GeoIP
 
 # Pagespeed module
 if [ ! -d $SRC_DIR/ngx_pagespeed ]; then
@@ -131,18 +141,20 @@ fi
 
 # OK, let's build nginx itself
 cd $SRC_DIR
-echo Download nginx $NGINX_VERSION source
-wget https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -O nginx.tar.gz
-echo Extract nginx
-tar -xzf nginx.tar.gz
-#mv nginx-$NGINX_VERSION nginx
+if [ ! -d $SRC_DIR/nginx-$NGINX_VERSION ]; then
+	echo Download nginx $NGINX_VERSION source
+	wget https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -O nginx.tar.gz
+	echo Extract nginx
+	tar -xzf nginx.tar.gz
+	#mv nginx-$NGINX_VERSION nginx
+fi
 
 echo Setting $(pwd) owner to $USER:$GROUP recursive
 chown $USER:$GROUP ./ -R
 
 cd nginx-$NGINX_VERSION
 
-GCC_OPTS='-O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2'
+GCC_OPTS='-static -static-libgcc -O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2'
 GCC_OPTS=$GCC_OPTS' -fexceptions -fstack-protector-strong'
 GCC_OPTS=$GCC_OPTS' --param=ssp-buffer-size=4 -grecord-gcc-switches'
 GCC_OPTS=$GCC_OPTS' -m64 -mtune='$MTUNE
@@ -201,5 +213,6 @@ echo Configuring
 	--with-file-aio \
 	--with-ipv6 \
 	--with-http_v2_module \
-	--with-cc-opt='$GCC_OPTS' \
-	--with-ld-opt='-Wl,-z,relro -Wl,--as-needed'
+	--with-cc-opt='${GCC_OPTS}' \
+	--with-ld-opt='-Bstatic,-z'
+make -j1
