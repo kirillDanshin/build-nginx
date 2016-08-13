@@ -15,46 +15,9 @@ yum install -y freetype-devel freetype libraqm-devel \
 	ghostscript autoconf
 
 echo Install requirements \[2/3\]
-if [ `which Wand-config` ] && [ z$FORCE_IMAGICK_INSTALL = "z" ]; then
-	echo Install ImageMagic \[skip\]
-else
-	if [ -e /usr/local/bin/MagickWand-config ] && [ ! -e /usr/bin/Wand-config ]; then
-		if [ ! -e /usr/bin/Wand-config ]; then
-			echo Add link from Wand-config to MagickWand-config
-			ln -s /usr/local/bin/MagickWand-config /usr/bin/Wand-config
-		fi
-		if [ ! -d /usr/local/include/ImageMagick-7/wand ] && [ -d /usr/local/include/ImageMagick-7/MagickWand ]; then
-			echo Add link from /wand to /MagicWand
-			ln -s /usr/local/include/ImageMagick-7/MagickWand /usr/local/include/ImageMagick-7/wand
-		fi
-	else
-		echo Install ImageMagick
-		mkdir -p $SRC_DIR
-		cd $SRC_DIR
 
-		if [ ! -d ImageMagick ]; then
-			git clone https://github.com/ImageMagick/ImageMagick.git
-		fi
-		cd ImageMagick
-		export OMP_NUM_THREADS=8
-		export CFLAGS="-Wno-deprecated-declarations -Wdeclaration-after-statement -Wno-error=unused-variable"
-		./configure --enable-shared --enable-hdri --with-cache
-		make
-		make install
-		make check
-		cd $SRC_DIR
-		rm -rf ImageMagick
+yum install ImageMagick ImageMagick-devel
 
-		if [ ! -e /usr/bin/Wand-config ] && [ ! -e /usr/bin/Wand-config ]; then
-			echo Add link from Wand-config to MagickWand-config
-			ln -s /usr/local/bin/MagickWand-config /usr/bin/Wand-config
-		fi
-		if [ ! -d /usr/local/include/ImageMagick-7/wand ] && [ -d /usr/local/include/ImageMagick-7/MagickWand ]; then
-			echo Add link from /wand to /MagicWand
-                        ln -s /usr/local/include/ImageMagick-7/MagickWand /usr/local/include/ImageMagick-7/wand
-                fi
-	fi
-fi
 echo Install requirements \[3/3\]
 yum install -y gcc-c++ pcre-devel zlib-devel make unzip pcre2-devel imlib2-devel libxml2 libxml2-devel libxslt-devel gd gd-devel perl-ExtUtils-Embed GeoIP-devel GeoIP
 
