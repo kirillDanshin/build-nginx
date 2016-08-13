@@ -12,6 +12,7 @@ MTUNE="i686"
 echo Install requirements \[1/5\]
 yum install -y freetype-devel freetype libraqm-devel harfbuzz-devel harfbuzz-icu harfbuzz fribidi-devel ghostscript autoconf 
 
+echo Install requirements \[2/5\]
 if [ `which Wand-config` ] && [ z$FORCE_IMAGICK_INSTALL = "z" ]; then
 	echo Install ImageMagic \[skip\]
 else
@@ -40,8 +41,11 @@ else
 		fi
 	fi
 fi
+echo Install requirements \[3/5\]
 yum install -y gcc-c++ pcre-devel zlib-devel make unzip pcre2-devel
+echo Install requirements \[4/5\]
 yum install -y imlib2-devel
+echo Install requirements \[5/5\]
 yum install -y gd gd-devel
 
 # Pagespeed module
