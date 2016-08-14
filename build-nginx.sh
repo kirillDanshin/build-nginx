@@ -117,7 +117,7 @@ chown $USER:$GROUP ./ -R
 
 cd nginx-$NGINX_VERSION
 
-GCC_OPTS='-static -static-libgcc -O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2'
+GCC_OPTS='-static-libgcc -O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2'
 GCC_OPTS=$GCC_OPTS' -fexceptions -fstack-protector-strong'
 GCC_OPTS=$GCC_OPTS' --param=ssp-buffer-size=4 -grecord-gcc-switches'
 GCC_OPTS=$GCC_OPTS' -m64 -mtune='$MTUNE
@@ -176,6 +176,5 @@ echo Configuring
 	--with-file-aio \
 	--with-ipv6 \
 	--with-http_v2_module \
-	--with-cc-opt='${GCC_OPTS}' \
-	--with-ld-opt='-Bstatic,-z'
-make -j1
+	--with-cc-opt=" $GCC_OPTS "
+make
