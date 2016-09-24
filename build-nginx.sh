@@ -9,10 +9,12 @@ SMALL_LIGHT_VERSION="0.8.0"
 # Use MTUNE="generic" if you don't know what to choose
 MTUNE="i686"
 
+mkdir -p $SRC_DIR || true
+
 echo Install requirements \[1/3\]
 yum install -y freetype-devel freetype libraqm-devel \
-	harfbuzz-devel harfbuzz-icu harfbuzz fribidi-devel \
-	ghostscript autoconf
+harfbuzz-devel harfbuzz-icu harfbuzz fribidi-devel \
+ghostscript autoconf
 
 echo Install requirements \[2/3\]
 
@@ -29,10 +31,10 @@ if [ ! -d $SRC_DIR/ngx_pagespeed ]; then
 	tar -xzf pagespeed.tar.gz
 	echo Clean ngx_pagespeed release
 	rm -rf pagespeed.tar.gz
-
+	
 	echo Move to expected include directory
-	mv ngx_pagespeed-1.11.33.2-beta ngx_pagespeed
-	cd ngx_pagespeed
+	mv ngx_pagespeed-1.11.33.2-beta $SRC_DIR/ngx_pagespeed
+	cd $SRC_DIR/ngx_pagespeed
 	echo Download ngx_pagespeed requirement: psol
 	wget https://dl.google.com/dl/page-speed/psol/$PAGESPEED_VERSION.tar.gz -O psol.tar.gz >/dev/null
 	echo Extract psol
@@ -51,7 +53,7 @@ if [ ! -d $SRC_DIR/openssl ]; then
 	echo Clean openssl
 	rm -rf openssl.tar.gz
 	echo Move to expected include directory
-	mv openssl-$OPENSSL_VERSION openssl
+	mv openssl-$OPENSSL_VERSION $SRC_DIR/openssl
 fi
 
 cd $SRC_DIR
@@ -69,7 +71,7 @@ echo Clean ngx_small_light
 rm -rf smallLight.tar.gz
 
 echo Move to expected include directory
-mv ngx_small_light-$SMALL_LIGHT_VERSION ngx_small_light
+mv ngx_small_light-$SMALL_LIGHT_VERSION $SRC_DIR/ngx_small_light
 
 cd $SRC_DIR/ngx_small_light
 ./setup --with-imlib2 --with-gd || ./setup --with-imlib2 || ./setup --with-gd || ./setup
@@ -85,7 +87,7 @@ if [ ! -d $SRC_DIR/njs ]; then
 	echo Clean NJS module
 	rm -rf njs.zip
 	echo Move to expected include directory
-	mv njs-master njs
+	mv njs-master $SRC_DIR/njs
 fi
 
 cd $SRC_DIR
@@ -99,7 +101,7 @@ if [ ! -d $SRC_DIR/echo ]; then
 	echo Clean echo module
 	rm -rf echo.zip
 	echo Move to expected include directory
-	mv echo-nginx-module-master echo
+	mv echo-nginx-module-master $SRC_DIR/echo
 fi
 
 # OK, let's build nginx itself
