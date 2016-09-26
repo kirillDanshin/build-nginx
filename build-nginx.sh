@@ -12,17 +12,29 @@ MTUNE="i686"
 
 mkdir -p $SRC_DIR || true
 
-echo Install requirements \[1/3\]
+echo Install requirements \[1/4\]
 yum install -y freetype-devel freetype libraqm-devel \
 	harfbuzz-devel harfbuzz-icu harfbuzz fribidi-devel \
 	ghostscript autoconf
 
-echo Install requirements \[2/3\]
+echo Install requirements \[2/4\]
 
 yum install ImageMagick ImageMagick-devel
 
-echo Install requirements \[3/3\]
-yum install -y gcc-c++ pcre-devel zlib-devel make unzip pcre2-devel imlib2-devel libxml2 libxml2-devel libxslt-devel gd gd-devel perl-ExtUtils-Embed GeoIP-devel GeoIP
+echo Install requirements \[3/4\]
+yum install -y gcc-c++ pcre-devel zlib-devel make unzip pcre2-devel imlib2-devel libxml2 libxml2-devel libxslt-devel gd gd-devel perl-ExtUtils-Embed GeoIP-devel GeoIP git
+
+echo Install requirements \[4/4\]
+cd $SRC_DIR
+git clone https://github.com/bagder/libbrotli
+cd libbrotli
+./autogen.sh
+./configure --prefix=/usr
+make
+make install
+ldconfig
+
+cd $SRC_DIR
 
 # Pagespeed module
 if [ ! -d $SRC_DIR/ngx_pagespeed ]; then
@@ -43,6 +55,16 @@ if [ ! -d $SRC_DIR/ngx_pagespeed ]; then
 	echo Clean psol
 	rm -rf psol.tar.gz
 fi
+cd $SRC_DIR
+
+# Brotli compression module
+if [ ! -d $SRC_DIR/brotli ]; then
+	echo Downloading ngx_brotli
+	wget https://github.com/google/ngx_brotli/archive/master.zip -O $SRC_DIR/brotli.zip
+	unzip brotli.zip
+	mv ngx_brotli-master brotli
+fi
+
 cd $SRC_DIR
 
 # OpenSSL module
@@ -182,6 +204,7 @@ echo Configuring
 	--add-module=$SRC_DIR/ngx_pagespeed \
 	--add-module=$SRC_DIR/ngx_small_light \
 	--add-module=$SRC_DIR/echo \
+	--add-module=$SRC_DIR/brotli \
 	\
 	--with-debug \
 	--with-threads \
