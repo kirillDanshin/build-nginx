@@ -4,7 +4,8 @@ set -e
 SRC_DIR=/tmp/nginx-sources
 NGINX_VERSION="1.11.3"
 PAGESPEED_VERSION="1.11.33.2"
-OPENSSL_VERSION="1.0.2h"
+#OPENSSL_VERSION="1.0.2h"
+OPENSSL_VERSION="1.0.2i"
 SMALL_LIGHT_VERSION="0.8.0"
 # Use MTUNE="generic" if you don't know what to choose
 MTUNE="i686"
@@ -13,8 +14,8 @@ mkdir -p $SRC_DIR || true
 
 echo Install requirements \[1/3\]
 yum install -y freetype-devel freetype libraqm-devel \
-harfbuzz-devel harfbuzz-icu harfbuzz fribidi-devel \
-ghostscript autoconf
+	harfbuzz-devel harfbuzz-icu harfbuzz fribidi-devel \
+	ghostscript autoconf
 
 echo Install requirements \[2/3\]
 
@@ -31,7 +32,7 @@ if [ ! -d $SRC_DIR/ngx_pagespeed ]; then
 	tar -xzf pagespeed.tar.gz
 	echo Clean ngx_pagespeed release
 	rm -rf pagespeed.tar.gz
-	
+
 	echo Move to expected include directory
 	mv ngx_pagespeed-1.11.33.2-beta $SRC_DIR/ngx_pagespeed
 	cd $SRC_DIR/ngx_pagespeed
@@ -54,6 +55,11 @@ if [ ! -d $SRC_DIR/openssl ]; then
 	rm -rf openssl.tar.gz
 	echo Move to expected include directory
 	mv openssl-$OPENSSL_VERSION $SRC_DIR/openssl
+	cd $SRC_DIR/openssl
+	echo Patch to get CHACHA20-POLY1305
+	wget https://raw.githubusercontent.com/travislee8964/sslconfig/ce9037bc42b1bb07dd74ed6cec5eae0b176281ff/patches/openssl__chacha20_poly1305_draft_and_rfc_ossl102i.patch
+	patch -p1 < openssl__chacha20_poly1305_draft_and_rfc_ossl102i.patch
+	./config
 fi
 
 cd $SRC_DIR
@@ -114,10 +120,19 @@ if [ ! -d $SRC_DIR/nginx-$NGINX_VERSION ]; then
 	#mv nginx-$NGINX_VERSION nginx
 fi
 
+
 echo Setting $(pwd) owner to $USER:$GROUP recursive
 chown $USER:$GROUP ./ -R
 
 cd nginx-$NGINX_VERSION
+
+echo Patching to get back SPDY
+wget https://raw.githubusercontent.com/felixbuenemann/sslconfig/updated-nginx-1.9.15-spdy-patch/patches/nginx_1_9_15_http2_spdy.patch
+patch -p1 -t < nginx_1_9_15_http2_spdy.patch
+
+echo Patching to get dynamic tls records work
+wget https://raw.githubusercontent.com/cloudflare/sslconfig/master/patches/nginx__dynamic_tls_records.patch
+patch -p1 -t < nginx__dynamic_tls_records.patch
 
 GCC_OPTS='-static-libgcc -O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2'
 GCC_OPTS=$GCC_OPTS' -fexceptions -fstack-protector-strong'
