@@ -193,5 +193,6 @@ echo Configuring
 	--with-file-aio \
 	--with-ipv6 \
 	--with-http_v2_module \
+	--with-http_spdy_module \
 	--with-cc-opt=" $GCC_OPTS "
 make
